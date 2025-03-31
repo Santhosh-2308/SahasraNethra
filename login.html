@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Login - SahasraNethra</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>SahasraNethra</h1>
+    <p>AI-Powered Disaster Prediction & Management System</p>
+    <nav>
+      <ul>
+        <li><a href="index.html" class="protected-link">Home</a></li>
+        <li><a href="alerts.html" class="protected-link">Live Alerts</a></li>
+        <li><a href="hazards.html" class="protected-link">Hazard Map</a></li>
+        <li><a href="contacts.html" class="protected-link">Emergency Contacts</a></li>
+        <li id="authLink"><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="login">
+      <h2>User Login</h2>
+      <form id="loginForm">
+        <label for="email">Email:</label>
+        <input type="email" id="email" placeholder="Enter your email" required />
+        <br>
+        <label for="password">Password:</label>
+        <input type="password" id="password" placeholder="Enter your password" required />
+        <br>
+        <button type="submit">Login</button>
+      </form>
+      <p id="loginMessage"></p>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 SahasraNethra. All Rights Reserved.</p>
+  </footer>
+
+  <!--  Load Firebase SDKs -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-app.js";
+    import { getAuth, signInWithEmailAndPassword } from "https://www.gstatic.com/firebasejs/10.11.1/firebase-auth.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyBZ6KS4PxYhoh-GsTjM_AdoDk5YDMWgsQE",
+      authDomain: "sahasranethra-ab8a5.firebaseapp.com",
+      projectId: "sahasranethra-ab8a5",
+      storageBucket: "sahasranethra-ab8a5.appspot.com",
+      messagingSenderId: "738704542372",
+      appId: "1:738704542372:web:babc772ca32e9c0cc1b431",
+      measurementId: "G-DZB2EHD6B2"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+
+    document.getElementById("loginForm").addEventListener("submit", async (e) => {
+      e.preventDefault();
+      const email = document.getElementById("email").value;
+      const password = document.getElementById("password").value;
+      const loginMessage = document.getElementById("loginMessage");
+
+      try {
+        const userCredential = await signInWithEmailAndPassword(auth, email, password);
+        console.log(" Login successful:", userCredential.user);
+
+        localStorage.setItem("isLoggedIn", "true");
+        localStorage.setItem("userEmail", userCredential.user.email);
+
+        window.location.href = "dashboard.html";
+      } catch (error) {
+        console.error("L Login failed:", error.message);
+        loginMessage.innerText = "Invalid credentials. Access restricted!";
+        loginMessage.style.color = "red";
+      }
+    });
+  </script>
+
+  <!--  Restrict Navigation & Redirect Unauthorized Users -->
+  <script>
+    document.addEventListener("DOMContentLoaded", function () {
+      const isLoggedIn = localStorage.getItem("isLoggedIn") === "true";
+      const protectedLinks = document.querySelectorAll(".protected-link");
+
+      // Block navigation links for non-logged-in users
+      protectedLinks.forEach(link => {
+        link.addEventListener("click", function (event) {
+          if (!isLoggedIn) {
+            event.preventDefault();
+            alert("=« Access Denied! Please log in to continue.");
+          }
+        });
+      });
+
+      // Redirect unauthorized users if they try to access a protected page manually
+      const restrictedPages = ["alerts.html", "hazards.html", "contacts.html", "dashboard.html"];
+      const currentPage = window.location.pathname.split("/").pop();
+      
+      if (restrictedPages.includes(currentPage) && !isLoggedIn) {
+        alert("=« You must log in first!");
+        window.location.href = "login.html";
+      }
+
+      // Change "Login" to "Logout" if user is logged in
+      const authLink = document.getElementById("authLink");
+      if (isLoggedIn) {
+        authLink.innerHTML = '<a href="#" id="logout">Logout</a>';
+      }
+
+      // Logout functionality
+      document.getElementById("logout")?.addEventListener("click", function () {
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("userEmail");
+        alert(" Logged out successfully!");
+        window.location.href = "login.html";
+      });
+    });
+  </script>
+</body>
+</html>

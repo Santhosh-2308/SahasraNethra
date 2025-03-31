@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Live Alerts - SahasraNethra</title>
+  <link rel="stylesheet" href="styles.css">
+  <script defer src="script.js"></script>
+</head>
+<body>
+  <header>
+    <h1>Live Disaster Alerts</h1>
+    <nav>
+      <ul>
+        <li><a href="index.html">Home</a></li>
+        <li><a href="alerts.html">Live Alerts</a></li>
+        <li><a href="hazards.html">Hazard Map</a></li>
+        <li><a href="contacts.html">Emergency Contacts</a></li>
+        <li><a href="login.html">Login</a></li>
+      </ul>
+    </nav>
+  </header>
+
+  <main>
+    <section id="alerts">
+      <h2>Latest Alerts</h2>
+      <div id="alertContainer">Loading latest alerts...</div>
+    </section>
+  </main>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', async function () {
+      const alertContainer = document.getElementById('alertContainer');
+      alertContainer.innerHTML = "Fetching latest alerts...";
+  
+      try {
+        // Fetch alerts from multiple sources
+        const [mlData, nasaData, usgsData, gdacsData] = await Promise.all([
+          fetch("http://localhost:5000/ml-alerts").then(res => res.json()), // Your ML backend
+          fetch("https://eonet.gsfc.nasa.gov/api/v3/events").then(res => res.json()),
+          fetch("https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/significant_week.geojson").then(res => res.json()),
+          fetch("https://www.gdacs.org/xml/rss.xml").then(res => res.text()) // GDACS returns XML, needs parsing
+        ]);
+  
+        let alerts = [];
+  
+        // ML Alerts
+        mlData.forEach(alert => {
+          alerts.push({
+            type: alert.type || "AI Predicted Alert",
+            message: alert.message || "Predicted hazard detected.",
+            link: alert.link || "#",
+          });
+        });
+  
+        // NASA EONET alerts
+        nasaData.events.forEach(event => {
+          alerts.push({
+            type: event.categories[0]?.title || "Unknown Event",
+            message: event.title,
+            link: event.sources[0]?.url || "#",
+          });
+        });
+  
+        // USGS Earthquake alerts
+        usgsData.features.forEach(eq => {
+          alerts.push({
+            type: "Earthquake",
+            message: `Magnitude ${eq.properties.mag} - ${eq.properties.place}`,
+            link: eq.properties.url,
+          });
+        });
+  
+        // GDACS alerts (basic parsing)
+        let parser = new DOMParser();
+        let xmlDoc = parser.parseFromString(gdacsData, "text/xml");
+        let gdacsItems = xmlDoc.getElementsByTagName("item");
+        for (let i = 0; i < gdacsItems.length; i++) {
+          let title = gdacsItems[i].getElementsByTagName("title")[0]?.textContent || "GDACS Alert";
+          let link = gdacsItems[i].getElementsByTagName("link")[0]?.textContent || "#";
+          alerts.push({ type: "GDACS Alert", message: title, link: link });
+        }
+  
+        // Update the HTML
+        alertContainer.innerHTML = alerts.length ? "" : "No alerts at the moment.";
+        alerts.forEach(alert => {
+          let alertDiv = document.createElement("div");
+          alertDiv.innerHTML = `<strong>${alert.type}</strong>: ${alert.message} 
+                                <a href="${alert.link}" target="_blank">[Details]</a>`;
+          alertContainer.appendChild(alertDiv);
+        });
+  
+      } catch (error) {
+        console.error("Error fetching alerts:", error);
+        alertContainer.innerHTML = "Failed to load alerts. Try again later.";
+      }
+    });
+  </script>
+  
+  <footer>
+    <p>&copy; 2025 SahasraNethra. All Rights Reserved.</p>
+  </footer>
+</body>
+</html>

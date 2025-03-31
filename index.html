@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Welcome - SahasraNethra</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <header>
+    <h1>Welcome to SahasraNethra</h1>
+    <p>AI-Powered Disaster Prediction & Management System</p>
+  </header>
+
+  <main>
+    <section id="login-prompt">
+      <h2>Access Restricted</h2>
+      <p>You must log in to access the platform.</p>
+      <button onclick="window.location.href='login.html'">Login</button>
+    </section>
+  </main>
+
+  <footer>
+    <p>&copy; 2025 SahasraNethra. All Rights Reserved.</p>
+  </footer>
+
+  <script>
+    // Redirect logged-in users to the dashboard
+    document.addEventListener('DOMContentLoaded', function () {
+      if (localStorage.getItem('isLoggedIn') === 'true') {
+        window.location.href = 'dashboard.html';
+      }
+    });
+  </script>
+</body>
+</html>
